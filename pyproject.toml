@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "tgitmo"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+beautifulsoup4 = "^4.12.3"
+lxml = "^5.2.1"
+requests = "^2.31.0"
+python-dotenv = "^1.0.1"
+fake-useragent = "^1.5.1"
+aiogram = "^3.4.1"
+aiohttp = "^3.9.5"
+async-cache = "^1.1.1"
+peewee = "^3.17.3"
+
+[tool.mypy]
+files = ["src"]
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

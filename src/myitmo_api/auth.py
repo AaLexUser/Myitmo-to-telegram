@@ -1,21 +1,19 @@
-from hashlib import sha256
 import html
-import json
 import logging
 import os
 import re
 import urllib.parse
 from base64 import urlsafe_b64encode
+from hashlib import sha256
+
 from aiohttp import ClientSession
-import requests
 from cache import AsyncTTL
 
 logger = logging.getLogger(__name__)
 
-_PROVIDER = "https://id.itmo.ru/auth/realms/itmo"
 _CLIENT_ID = "student-personal-cabinet"
 _REDIRECT_URI = "https://my.itmo.ru/login/callback"
-_FORM_ACTION_REGEX = re.compile(r'<form\s+.*?\s+action="(?P<action>.*?)"', re.DOTALL)
+_PROVIDER = "https://id.itmo.ru/auth/realms/itmo"
 
 
 def generate_code_verifier():
@@ -29,6 +27,9 @@ def get_code_challenge(code_verifier: str):
     return code_challenge.replace("=", "")  # remove base64 padding
 
 
+_FORM_ACTION_REGEX = re.compile(r'<form\s+.*?\s+action="(?P<action>.*?)"', re.DOTALL)
+
+
 @AsyncTTL(time_to_live=55 * 60, skip_args=1)
 async def get_access_token(session: ClientSession, username: str, password: str) -> str:
     logger.info(f"Getting new access token for {username}")
@@ -37,7 +38,7 @@ async def get_access_token(session: ClientSession, username: str, password: str)
     code_challenge = get_code_challenge(code_verifier)
 
     auth_resp = await session.get(
-        url=_PROVIDER + "/protocol/openid-connect/auth",
+        _PROVIDER + "/protocol/openid-connect/auth",
         params=dict(
             protocol="oauth2",
             response_type="code",
@@ -49,12 +50,10 @@ async def get_access_token(session: ClientSession, username: str, password: str)
             code_challenge=code_challenge,
         ),
     )
-
     auth_resp.raise_for_status()
 
     form_action_match = _FORM_ACTION_REGEX.search(await auth_resp.text())
-    if not form_action_match:
-        raise Exception("Keycloak form action regexp match not found")
+    assert form_action_match, "Keycloak form action regexp match not found"
     form_action = html.unescape(form_action_match.group("action"))
 
     form_resp = await session.post(
@@ -65,6 +64,7 @@ async def get_access_token(session: ClientSession, username: str, password: str)
     )
     if form_resp.status != 302:
         raise ValueError(f"Wrong Keycloak form response: {form_resp.status} {await form_resp.text()}")
+
     url_redirected_to = form_resp.headers["Location"]
     query = urllib.parse.urlparse(url_redirected_to).query
     redirect_params = urllib.parse.parse_qs(query)

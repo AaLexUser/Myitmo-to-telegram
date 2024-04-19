@@ -52,7 +52,7 @@ def get_lessons(date: datetime.date):
         if date.day == item_date.day and date.month == item_date.month and date.year == item_date.year:
             lessons = format_lessons_json(item)
             if lessons is not None:
-                return f"Пары на {date.strftime('%Y-%m-%d')}\n" + lessons
+                return f"Schedule for {date.strftime('%Y-%m-%d')}\n" + lessons
             break
     return f"No lessons for {date.strftime('%Y-%m-%d')}"
 

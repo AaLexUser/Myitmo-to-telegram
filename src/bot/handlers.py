@@ -1,10 +1,17 @@
-import datetime
+import asyncio
+from datetime import date
+
 import os
+from time import strptime
+
+import aiocron
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+
+from src.bot.bot import get_bot
 
 from src.myitmo_api.app import *
 from src.yagpt.yagpt_api import *
@@ -31,6 +38,41 @@ YA_DIR_ID = os.getenv("YA_DIR_ID")
 if YA_DIR_ID is None:
     raise ValueError("YA_DIR_ID environment variable is not set")
 yagpt = YandexGpt(YA_API_KEY, YA_DIR_ID)
+
+class_reminder = None
+
+
+async def send_daily_reminder(chat_id: int):
+    today = date.today()
+    lessons = get_lessons(today)
+    await get_bot().send_message(chat_id=chat_id, text=lessons)
+
+
+@router.message(Command('start_class_reminder'))
+async def start_daily_review(message: Message):
+    if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        global class_reminder
+        if class_reminder is None:
+            # specifies the schedule: at minute 0 of hour 9, every day of the month, every month, and every day of the week.
+            class_reminder = aiocron.crontab('0 9 * * *', func=send_daily_reminder, args=(message.chat.id,))
+            await message.reply("Daily class reminder enabled.")
+        else:
+            await message.reply("Daily class reminder was already enabled.")
+    else:
+        await message.reply(UNAUTHORIZED_MESSAGE)
+
+@router.message(Command('stop_class_reminder'))
+async def stop_auto(message: Message):
+    if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        global class_reminder
+        if class_reminder is None:
+            await message.reply("Daily class reminder is not running.")
+        else:
+            await asyncio.sleep(10)
+            if class_reminder: class_reminder.cancel()
+            await message.reply("Daily class reminder is disabled")
+    else:
+        await message.reply(UNAUTHORIZED_MESSAGE)
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
@@ -74,7 +116,7 @@ async def cmd_getLessons(message: Message, state: FSMContext):
 async def cmd_getLessonsArgs(message: Message, state: FSMContext):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
         try:
-            date = datetime.strptime(message.text, "%Y-%m-%d").date()
+            date = strptime(message.text, "%Y-%m-%d").date()
         except ValueError:
             await message.answer("Invalid date format. Please enter in YYYY-MM-DD format.")
             return
@@ -92,7 +134,7 @@ async def cmd_ya_answer(message: Message):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
         date_str = await ya_extract_date(yagpt, message)
         try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            date = strptime(date_str, "%Y-%m-%d").date()
             lessons = get_lessons(date)
             if not lessons:
                 await message.answer(f"No lessons found for the provided date: {date_str}")

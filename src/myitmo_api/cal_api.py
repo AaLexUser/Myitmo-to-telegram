@@ -1,8 +1,5 @@
 from datetime import date
-
-import requests
 import logging
-from typing import Iterable
 
 from aiohttp import ClientSession
 from fake_useragent import UserAgent

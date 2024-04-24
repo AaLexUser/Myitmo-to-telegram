@@ -1,27 +1,23 @@
-FROM python:3.11-slim as base
+FROM python:3.12-slim
 
-RUN mkdir -p /app
+ENV POETRY_VERSION=1.8.2
+ENV POETRY_HOME=/opt/poetry
+ENV POETRY_VENV=/opt/poetry-venv
+ENV POETRY_CACHE_DIR=/opt/.cache
+
+RUN python3 -m venv $POETRY_VENV \
+	&& $POETRY_VENV/bin/pip install -U pip setuptools \
+	&& $POETRY_VENV/bin/pip install poetry==${POETRY_VERSION}
+
+ENV PATH="${PATH}:${POETRY_VENV}/bin"
+
 WORKDIR /app
 
-RUN useradd --create-home appuser && chown appuser /app
+COPY poetry.lock pyproject.toml ./
+RUN poetry install
+RUN poetry lock
 
-FROM base as poetry-deps
+COPY . .
 
-ARG POETRY_VERSION=1.8.2
-
-ENV LANG=C.UTF-8 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1
-
-USER appuser
-RUN pip install --user pipx
-ENV PATH=/home/appuser/.local/bin:$PATH
-RUN pipx install poetry==${POETRY_VERSION}
-
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --only=main --no-root --no-cache
+CMD ["poetry", "run", "python", "src/telbot/run.py"]
 

@@ -11,10 +11,10 @@ from aiogram import Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from src.bot.bot import get_bot
+from bot import get_bot
 
-from src.myitmo_api.app import *
-from src.yagpt.yagpt_api import *
+from myitmo_api.app import *
+from yagpt.yagpt_api import *
 
 
 class GetLessonsArgs(StatesGroup):
@@ -69,7 +69,7 @@ async def stop_auto(message: Message):
             await message.reply("Daily class reminder is not running.")
         else:
             await asyncio.sleep(10)
-            if class_reminder: class_reminder.cancel()
+            if class_reminder: class_reminder.stop()
             await message.reply("Daily class reminder is disabled")
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)

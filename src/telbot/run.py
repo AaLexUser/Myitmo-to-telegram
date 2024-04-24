@@ -1,11 +1,8 @@
 import asyncio
-import datetime
 
-from dotenv import load_dotenv
 from aiogram import Dispatcher
-from src.bot.handlers import router
-from src.bot.bot import get_bot
-import os
+from handlers import router
+from bot import get_bot
 
 dp = Dispatcher()
 

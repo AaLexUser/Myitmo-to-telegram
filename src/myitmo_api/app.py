@@ -1,11 +1,11 @@
 import datetime
 import json
 
-from src.myitmo_api.auth import get_access_token
+from myitmo_api.auth import get_access_token
 from dotenv import load_dotenv
 from aiohttp import ClientSession
 import os
-from src.myitmo_api.cal_api import get_raw_schedule
+from myitmo_api.cal_api import get_raw_schedule
 
 SCHEDULE_FILE_PATH = 'schedule.json'
 DATE_FORMAT = "%Y-%m-%d"

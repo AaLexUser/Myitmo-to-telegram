@@ -15,9 +15,8 @@ WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 RUN poetry install
-RUN poetry lock
 
 COPY . .
 
-CMD ["poetry", "run", "python", "src/telbot/run.py"]
+CMD ["poetry", "run", "python", "src/run.py"]
 

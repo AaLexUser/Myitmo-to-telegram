@@ -13,8 +13,8 @@ from aiogram.fsm.context import FSMContext
 
 from bot import get_bot
 
-from myitmo_api.app import *
-from yagpt.yagpt_api import *
+from app import *
+from yagpt_api import *
 
 
 class GetLessonsArgs(StatesGroup):

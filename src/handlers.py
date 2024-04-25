@@ -3,10 +3,10 @@ from datetime import date
 
 import os
 from time import strptime
+from aiogram import Dispatcher
 
 import aiocron
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -20,11 +20,27 @@ from yagpt_api import *
 class GetLessonsArgs(StatesGroup):
     date_req = State()
 
-# Constants
-UNAUTHORIZED_MESSAGE = "Мама говорила с незнакомцами не разговаривать."
 
+class GetRemindArgs(StatesGroup):
+    time_req = State()
+
+
+# Constants
+UNAUTHORIZED_MESSAGE = "My mom told me not to talk to strangers..."
+
+# don't look at me
+commands_description = {
+    '/start_class_reminder': 'Start daily class reminder.',
+    '/stop_class_reminder': 'Stop daily class reminder.',
+    '/updateDB': 'Update the database. Download the schedule from my.itmo.',
+    '/getTodayLessons': 'Get today\'s lessons.',
+    '/getLessons': 'Get lessons for a specific date.',
+    '/help': 'Show available commands and their descriptions.'
+}
 # Initialize Router
 router = Router()
+
+dispatcher = Dispatcher()
 
 # Load environment variables
 load_dotenv()
@@ -49,17 +65,35 @@ async def send_daily_reminder(chat_id: int):
 
 
 @router.message(Command('start_class_reminder'))
-async def start_daily_review(message: Message):
+async def start_daily_review(message: Message, state: FSMContext):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        await state.set_state(GetRemindArgs.time_req)
+        await message.answer("Please enter the time at which you would like to receive the schedule (in format HH:MM):")
+    else:
+        await message.reply(UNAUTHORIZED_MESSAGE)
+
+
+@router.message(GetRemindArgs.time_req)
+async def cmd_getRemindArgs(message: Message, state: FSMContext):
+    if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        try:
+            time_to_remind = datetime.strptime(message.text, "%H:%M").time()
+        except ValueError:
+            await message.answer("Invalid time format. Please enter in hh:mm format.")
+            return
+        hour = time_to_remind.hour
+        minute = time_to_remind.minute
         global class_reminder
         if class_reminder is None:
-            # specifies the schedule: at minute 0 of hour 9, every day of the month, every month, and every day of the week.
-            class_reminder = aiocron.crontab('0 9 * * *', func=send_daily_reminder, args=(message.chat.id,))
+            class_reminder = aiocron.crontab(f'{minute} {hour} * * *', func=send_daily_reminder,
+                                             args=(message.chat.id,))
             await message.reply("Daily class reminder enabled.")
         else:
             await message.reply("Daily class reminder was already enabled.")
+        await state.clear()
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
+
 
 @router.message(Command('stop_class_reminder'))
 async def stop_auto(message: Message):
@@ -74,20 +108,23 @@ async def stop_auto(message: Message):
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
 
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
-        await message.answer(f'Привет, {message.from_user.first_name}!')
+        await message.answer(f'Hello, {message.from_user.first_name}!')
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
+
 
 @router.message(Command('updateDB'))
 async def cmd_update(message: Message):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        await message.answer("Downloading in process...")
         res = await update_schedule()
         formatted_date = message.date.strftime("%Y-%m-%d %H:%M:%S")
         if res is True:
-            await message.answer(f'База обновлена, {formatted_date}!')
+            await message.answer(f'Database updated, {formatted_date}!')
         else:
             await message.answer(f'Failed to update schedule: {formatted_date}')
     else:
@@ -129,6 +166,18 @@ async def cmd_getLessonsArgs(message: Message, state: FSMContext):
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
 
+
+@router.message(Command('help'))
+async def cmd_help(message: Message):
+    if message.from_user and str(message.from_user.id) == MY_TG_ID:
+        help_text = "The list of accessible commands:\n\n"
+        for command, description in commands_description.items():
+            help_text += f"{command} - {description}\n"
+        await message.answer(help_text.strip())
+    else:
+        await message.reply(UNAUTHORIZED_MESSAGE)
+
+
 @router.message()
 async def cmd_ya_answer(message: Message):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
@@ -142,10 +191,7 @@ async def cmd_ya_answer(message: Message):
                 answer = await ya_answer(yagpt, message, lessons)
                 await message.answer(answer)
         except Exception as e:
-            await message.answer(f"The date was not correctly recognized. Try again")
+
+            await message.answer(f"The date was not correctly recognized. Try again ")
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
-
-
-
-

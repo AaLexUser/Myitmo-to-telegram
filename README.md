@@ -4,11 +4,13 @@
 
 
 ## How to start?
+
  Launching a bot involves several essential steps, each contributing to a seamless deployment process:
 
 ### 1. Cloning the Repository
 
 This step is relatively straightforward:
+
 ```bash
     git clone https://github.com/AaLexUser/MyitmoGPT.git
 ```
@@ -21,7 +23,7 @@ As we highly prioritize the security of our clients, we cannot afford to host pr
 
 Now, navigate to the recently cloned repository and create a file named ```.env``` in the ```src``` directory with the following content:
 
-```
+```text
 ISU_USERNAME={YOUR ISU USERNAME}
 ISU_PASSWORD={YOUR ISO PASSWORD}
 BOT_TOKEN={YOUR BOT TOKEN}
@@ -31,7 +33,7 @@ YA_DIR_ID= {...}
 ```
 
 Let's break down what needs to be written here. The first three points are obvious, while the last two are well described 
-in this article: [Integrating Yandex Disk API](https://habr.com/ru/articles/780008/).
+in this article: [Integrating Yandex GPT API](https://habr.com/ru/articles/780008/).
 
 ```TG_ID``` is a bit more complicated - it's not your identifier with ```@```, but an immutable 
 numerical value that identifies your account. To obtain it, execute the command /start in the bot [userinfobot](https://t.me/userinfobot).
@@ -40,10 +42,8 @@ numerical value that identifies your account. To obtain it, execute the command 
 
 In our repository, you can find a Dockerfile. We will use it to create a Docker image for the Python application using the Poetry tool to manage Python dependencies. To run this Dockerfile, you need to execute the docker build command in the directory containing the Dockerfile, specifying a tag for the image:
 
-
-
 ```bash
-docker build -t {my-python-app}
+docker build -t itmogpt:latest
 ```
 
 ### 5. Running Docker
@@ -63,9 +63,3 @@ itmogpt:latest
 ### 6. Enjoying the Experience
 
 Once the bot is up and running, sit back and enjoy the experience! Interact with the bot, test its functionality, and observe its behavior in action. Whether it's automating tasks, providing assistance, or entertaining users, the bot's deployment marks the culmination of your efforts, offering a valuable addition to your platform or community.
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date
+from datetime import datetime, date
 
 import os
 from time import strptime
@@ -7,6 +7,7 @@ from aiogram import Dispatcher
 
 import aiocron
 from aiogram.filters import CommandStart, Command
+from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -183,7 +184,7 @@ async def cmd_ya_answer(message: Message):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
         date_str = await ya_extract_date(yagpt, message)
         try:
-            date = strptime(date_str, "%Y-%m-%d").date()
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
             lessons = get_lessons(date)
             if not lessons:
                 await message.answer(f"No lessons found for the provided date: {date_str}")
@@ -191,7 +192,12 @@ async def cmd_ya_answer(message: Message):
                 answer = await ya_answer(yagpt, message, lessons)
                 await message.answer(answer)
         except Exception as e:
-
-            await message.answer(f"The date was not correctly recognized. Try again ")
+            answer = await ya_answer(yagpt, message, "")
+            await message.answer(answer)
+            #await message.answer(f"The date was not correctly recognized. Try again ")
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
+
+
+
+

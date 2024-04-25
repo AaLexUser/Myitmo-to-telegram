@@ -7,11 +7,9 @@ from aiogram import Dispatcher
 
 import aiocron
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
 from aiogram import Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import get_bot
 
@@ -66,19 +64,6 @@ async def send_daily_reminder(chat_id: int):
     await get_bot().send_message(chat_id=chat_id, text=lessons)
 
 
-# @router.message(Command('start_class_reminder'))
-# async def start_daily_review(message: Message):
-#     if message.from_user and str(message.from_user.id) == MY_TG_ID:
-#         global class_reminder
-#         if class_reminder is None:
-#             # specifies the schedule: at minute 0 of hour 9, every day of the month, every month, and every day of the week.
-#             class_reminder = aiocron.crontab('0 9 * * *', func=send_daily_reminder, args=(message.chat.id,))
-#             await message.reply("Daily class reminder enabled.")
-#         else:
-#             await message.reply("Daily class reminder was already enabled.")
-#     else:
-#         await message.reply(UNAUTHORIZED_MESSAGE)
-
 @router.message(Command('start_class_reminder'))
 async def start_daily_review(message: Message, state: FSMContext):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
@@ -86,6 +71,8 @@ async def start_daily_review(message: Message, state: FSMContext):
         await message.answer("Please enter the time at which you would like to receive the schedule (in format HH:MM):")
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
+
+
 @router.message(GetRemindArgs.time_req)
 async def cmd_getRemindArgs(message: Message, state: FSMContext):
     if message.from_user and str(message.from_user.id) == MY_TG_ID:
@@ -98,13 +85,15 @@ async def cmd_getRemindArgs(message: Message, state: FSMContext):
         minute = time_to_remind.minute
         global class_reminder
         if class_reminder is None:
-            class_reminder = aiocron.crontab(f'{minute} {hour} * * *', func=send_daily_reminder, args=(message.chat.id,))
+            class_reminder = aiocron.crontab(f'{minute} {hour} * * *', func=send_daily_reminder,
+                                             args=(message.chat.id,))
             await message.reply("Daily class reminder enabled.")
         else:
             await message.reply("Daily class reminder was already enabled.")
         await state.clear()
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
+
 
 @router.message(Command('stop_class_reminder'))
 async def stop_auto(message: Message):
@@ -176,9 +165,6 @@ async def cmd_getLessonsArgs(message: Message, state: FSMContext):
         await state.clear()
     else:
         await message.reply(UNAUTHORIZED_MESSAGE)
-
-
-
 
 
 @router.message(Command('help'))

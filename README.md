@@ -1,6 +1,6 @@
 # MyItmoGPT
 
-![Static Badge](https://img.shields.io/badge/AUTHORS%3A-red) ![Static Badge](https://img.shields.io/badge/Alexey,%20Ksenia,%20Arkadiy-blue)
+![Static Badge](https://img.shields.io/badge/AUTHORS%3A-red) ![Static Badge](https://img.shields.io/badge/Alexey%20Ksenia%20Arkadiy-blue)
 
 
 ## How to start?
